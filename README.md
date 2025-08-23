@@ -9,11 +9,11 @@ Version: 1.4.2 · Requires WP 5.4+, PHP 7.2+ · Tested up to 6.8.2
 
 * Readiness Dashboard
 
-**Overall Readiness Score with a progress meter.
+** Overall Readiness Score with a progress meter.
 
-**AI Bot Activity: top crawlers, last seen, mini meters, and a recent events table.
+** AI Bot Activity: top crawlers, last seen, mini meters, and a recent events table.
 
-**Key signals: robots.txt reachable, physical file present, JSON-LD detected, logging status, ping endpoint health.
+** Key signals: robots.txt reachable, physical file present, JSON-LD detected, logging status, ping endpoint health.
 
 Verification
 

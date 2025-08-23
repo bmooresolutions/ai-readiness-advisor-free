@@ -1,4 +1,4 @@
-***AI Readiness Advisor (FREE)***
+***AI Readiness Advisor (FREE)*** Wordpress plugin for your website
 
 Audit & verify AI-crawler access, preview your robots.txt, generate test hits for logs, visualize AI bot activity, and check JSON-LD (schema.org) — all from your WordPress dashboard.
 Version: 1.4.2 · Requires WP 5.4+, PHP 7.2+ · Tested up to 6.8.2

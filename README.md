@@ -9,19 +9,19 @@ Version: 1.4.2 · Requires WP 5.4+, PHP 7.2+ · Tested up to 6.8.2
 
 * Readiness Dashboard
 
-** Overall Readiness Score with a progress meter.
+ * Overall Readiness Score with a progress meter.
 
-** AI Bot Activity: top crawlers, last seen, mini meters, and a recent events table.
+ * AI Bot Activity: top crawlers, last seen, mini meters, and a recent events table.
 
-** Key signals: robots.txt reachable, physical file present, JSON-LD detected, logging status, ping endpoint health.
+ * Key signals: robots.txt reachable, physical file present, JSON-LD detected, logging status, ping endpoint health.
 
-Verification
+***Verification***
 
 Simulate access at / for known user-agents and show Allowed / Blocked / Not specified (based on your live robots.txt).
 
 Custom Path Verification for any path + bot.
 
-Tools
+***Tools***
 
 Quick Test (no shell): emulates a bot and writes a log entry instantly (great for shared hosting).
 
@@ -29,13 +29,13 @@ Robots.txt Preview: shows the served file, HTTP status, whether a physical file 
 
 Structured Data Quick Check: detects JSON-LD blocks and lists discovered @types.
 
-Logs
+***Logs***
 
 Stores and displays recent AI bot hits (time, bot type, UA, IP, URI).
 
 Refresh and Clear controls.
 
-Help
+***Help***
 
 Copy-paste server snippets for Apache, Nginx, Cloudflare, and WordPress filter examples for dynamic robots.
 
@@ -43,7 +43,7 @@ Bash & PowerShell commands to emulate bots and create log entries.
 
 Starter robots.txt content and DIY instructions.
 
-🔎 Which bots are recognized?
+🔎 ***Which bots are recognized?***
 
 OAI-SearchBot (OpenAI discovery, not training)
 
@@ -61,7 +61,7 @@ CCBot (Common Crawl)
 
 Reminder: Robots policies are voluntary. Most reputable providers honor them; enforcement at the edge needs server rules or WAF.
 
-🧭 Interpreting results
+🧭*** Interpreting results***
 
 Allowed — a matching Allow (or no matching Disallow) lets this UA access the path.
 
@@ -71,7 +71,7 @@ Not specified — no matching UA group; the decision isn’t defined (the UA fal
 
 No physical robots.txt — WordPress may be serving a virtual robots.txt. You’ll see a 200 HTTP status but no file on disk. The plugin shows both the HTTP result and physical presence.
 
-🚀 Getting started
+🚀 ***Getting started***
 
 Install & Activate the plugin.
 
@@ -85,17 +85,17 @@ Open Tools → Robots.txt Preview:
 
 If you don’t have a physical file, click Download starter robots.txt and upload it to your web root.
 
-🧰 Useful snippets (copy/paste)
+🧰 ***Useful snippets (copy/paste)***
 
 Apache (block common training bots)
-
+<pre>
 RewriteEngine On
 RewriteCond %{HTTP_USER_AGENT} (GPTBot|CCBot|PerplexityBot) [NC]
 RewriteRule ^ - [F]
-
+</pre>
 
 Nginx (same idea)
-
+<pre>
 map $http_user_agent $block_ai {
     default 0;
     ~*(GPTBot|CCBot|PerplexityBot) 1;
@@ -103,23 +103,23 @@ map $http_user_agent $block_ai {
 server {
     if ($block_ai) { return 403; }
 }
-
+</pre>
 
 Cloudflare Firewall expression
-
+<pre>
 (http.user_agent contains "GPTBot" or http.user_agent contains "CCBot" or http.user_agent contains "PerplexityBot")
-
+</pre>
 
 WordPress dynamic robots filter (example)
-
+<pre>
 add_filter('robots_txt', function($output, $public){
     $custom = "User-agent: GPTBot\nDisallow: /\n";
     return $custom . $output;
 }, 10, 2);
-
+</pre>
 
 Starter robots.txt
-
+<pre>
 Sitemap: https://example.com/sitemap.xml
 
 User-agent: *
@@ -142,19 +142,19 @@ Disallow:
 
 User-agent: Applebot-Extended
 Disallow:
-
+</pre>
 
 Create a test log entry (Bash)
-
+<pre>
 curl -A "ChatGPT-User" -sS "https://example.com/wp-json/airai/v1/ping?path=/airai-test"
-
+</pre>
 
 Create a test log entry (PowerShell)
-
+<pre>
 $Headers = @{ "User-Agent" = "ChatGPT-User" }
 Invoke-WebRequest -UseBasicParsing -Uri "https://example.com/wp-json/airai/v1/ping?path=/airai-test" -Headers $Headers | Out-Null
-
-🔐 Security & Privacy
+</pre>
+🔐 ***Security & Privacy***
 
 Admin screens require manage_options capability.
 
@@ -164,7 +164,7 @@ All superglobals are wp_unslash() + sanitize_text_field() before use.
 
 Logs are stored in the options table under airai_free_bot_log_v1 with a size cap (default 300 entries).
 
-🧩 Troubleshooting
+🧩 ***Troubleshooting***
 
 “Failed to load plugin state”:
 
@@ -178,25 +178,24 @@ Check server error logs for firewall/WAF blocks.
 
 Verify REST route: /wp-json/airai/v1/ping.
 
-🆚 Free vs Pro
-Feature	FREE	PRO
+🆚 ***Free vs Pro***
+        Feature              	      FREE  PRO
 Readiness score & dashboard activity	✅	✅ (with time filters & export)
 Robots.txt preview & starter download	✅	✅ + one-click write to disk (with backup & revert)
-Verification (root & custom path)	✅	✅ (batch checks + saved scenarios)
-Logs (view, clear)	✅	✅ + CSV export & retention controls
-Quick Test (no shell)	✅	✅ (multi-UA test matrix)
-Structured Data quick check	✅	✅ (deeper hints + external validators links)
-Help: server snippets & commands	✅	✅ (guided wizards + copy buttons)
-Policy presets & apply changes	—	✅ (apply to robots.txt dynamically or physical file)
-JSON import/export of settings	—	✅
+Verification (root & custom path)	    ✅	✅ (batch checks + saved scenarios)
+Logs (view, clear)	                    ✅	✅ + CSV export & retention controls
+Quick Test (no shell)	                ✅	✅ (multi-UA test matrix)
+Structured Data quick check	            ✅	✅ (deeper hints + external validators links)
+Help: server snippets & commands	    ✅	✅ (guided wizards + copy buttons)
+Policy presets & apply changes	—	        ✅ (apply to robots.txt dynamically or physical file)
+JSON import/export of settings	—	        ✅
 Server snippet generator (Apache/Nginx/Cloudflare)	—	✅ (tailored to site paths)
-Scheduler (periodic audit + email)	—	✅
-Multisite tools	—	✅
-Licensing	—	Lemon Squeezy (single or multi-site)
+Scheduler (periodic audit + email)	—	    ✅
+Multisite tools	—	                        ✅
 
 TL;DR: FREE shows you everything and helps you DIY. PRO performs the changes safely, adds export/automation, and saves you time.
 
-📦 Uninstall
+📦 ***Uninstall***
 
 Deactivating leaves data intact. Remove options/logs manually if desired:
 
@@ -204,11 +203,11 @@ Options key: airai_free_options_v1
 
 Logs key: airai_free_bot_log_v1
 
-⚠️ Disclaimer
+⚠️ ***Disclaimer***
 
 Compliance with robots.txt depends on the crawler. For stronger enforcement, use server/WAF rules (snippets provided).
 
-🧠 Changelog (highlights)
+🧠*** Changelog (highlights)***
 
 1.4.2 – Hardened AJAX parsing, nonce fallback (admin-only), stability improvements.
 

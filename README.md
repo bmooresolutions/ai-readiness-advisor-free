@@ -177,7 +177,7 @@ No log entries after Quick Test:
 Check server error logs for firewall/WAF blocks.
 
 Verify REST route: /wp-json/airai/v1/ping.
-
+<pre>
 🆚 ***Free vs Pro***
         Feature              	      FREE  PRO
 Readiness score & dashboard activity	✅	✅ (with time filters & export)
@@ -192,7 +192,7 @@ JSON import/export of settings	—	        ✅
 Server snippet generator (Apache/Nginx/Cloudflare)	—	✅ (tailored to site paths)
 Scheduler (periodic audit + email)	—	    ✅
 Multisite tools	—	                        ✅
-
+</pre>
 TL;DR: FREE shows you everything and helps you DIY. PRO performs the changes safely, adds export/automation, and saves you time.
 
 📦 ***Uninstall***

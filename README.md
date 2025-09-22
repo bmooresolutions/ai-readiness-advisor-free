@@ -1,11 +1,11 @@
-***AI Readiness Advisor (FREE)*** Wordpress plugin for your website
+***AI Readiness Advisor*** Wordpress plugin for your website
 
 Audit & verify AI-crawler access, preview your robots.txt, generate test hits for logs, visualize AI bot activity, and check JSON-LD (schema.org) — all from your WordPress dashboard.
-Version: 1.4.2 · Requires WP 5.4+, PHP 7.2+ · Tested up to 6.8.2
+Version: 1.5.6 · Requires WP 5.4+, PHP 7.4+ · Tested up to 6.8
 
 “Get your site AI-ready — without getting lost in the matrix.” 🕶️
 
-✨ ***What it does (FREE)***
+✨ ***What it does***
 
 * Readiness Dashboard
 
@@ -177,23 +177,6 @@ No log entries after Quick Test:
 Check server error logs for firewall/WAF blocks.
 
 Verify REST route: /wp-json/airai/v1/ping.
-<pre>
-🆚 ***Free vs Pro***
-        Feature              	      FREE  PRO
-Readiness score & dashboard activity	✅	✅ (with time filters & export)
-Robots.txt preview & starter download	✅	✅ + one-click write to disk (with backup & revert)
-Verification (root & custom path)	    ✅	✅ (batch checks + saved scenarios)
-Logs (view, clear)	                    ✅	✅ + CSV export & retention controls
-Quick Test (no shell)	                ✅	✅ (multi-UA test matrix)
-Structured Data quick check	            ✅	✅ (deeper hints + external validators links)
-Help: server snippets & commands	    ✅	✅ (guided wizards + copy buttons)
-Policy presets & apply changes	—	        ✅ (apply to robots.txt dynamically or physical file)
-JSON import/export of settings	—	        ✅
-Server snippet generator (Apache/Nginx/Cloudflare)	—	✅ (tailored to site paths)
-Scheduler (periodic audit + email)	—	    ✅
-Multisite tools	—	                        ✅
-</pre>
-TL;DR: FREE shows you everything and helps you DIY. PRO performs the changes safely, adds export/automation, and saves you time.
 
 📦 ***Uninstall***
 

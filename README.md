@@ -1,11 +1,11 @@
 ***AI Readiness Advisor*** Wordpress plugin for your website
 
 Audit & verify AI-crawler access, preview your robots.txt, generate test hits for logs, visualize AI bot activity, and check JSON-LD (schema.org) — all from your WordPress dashboard.
-Version: 1.5.6 · Requires WP 5.4+, PHP 7.4+ · Tested up to 6.8
+Version: 2.0.2 · Requires WP 5.4+, PHP 7.4+ · Tested up to 6.8
 
 “Get your site AI-ready — without getting lost in the matrix.” 🕶️
 
-✨ ***What it does***
+***What it does***
 
 * Readiness Dashboard
 
@@ -43,7 +43,7 @@ Bash & PowerShell commands to emulate bots and create log entries.
 
 Starter robots.txt content and DIY instructions.
 
-🔎 ***Which bots are recognized?***
+***Which bots are recognized?***
 
 OAI-SearchBot (OpenAI discovery, not training)
 
@@ -61,7 +61,7 @@ CCBot (Common Crawl)
 
 Reminder: Robots policies are voluntary. Most reputable providers honor them; enforcement at the edge needs server rules or WAF.
 
-🧭*** Interpreting results***
+*** Interpreting results***
 
 Allowed — a matching Allow (or no matching Disallow) lets this UA access the path.
 
@@ -71,7 +71,7 @@ Not specified — no matching UA group; the decision isn’t defined (the UA fal
 
 No physical robots.txt — WordPress may be serving a virtual robots.txt. You’ll see a 200 HTTP status but no file on disk. The plugin shows both the HTTP result and physical presence.
 
-🚀 ***Getting started***
+***Getting started***
 
 Install & Activate the plugin.
 
@@ -85,7 +85,7 @@ Open Tools → Robots.txt Preview:
 
 If you don’t have a physical file, click Download starter robots.txt and upload it to your web root.
 
-🧰 ***Useful snippets (copy/paste)***
+***Useful snippets (copy/paste)***
 
 Apache (block common training bots)
 <pre>
@@ -154,7 +154,7 @@ Create a test log entry (PowerShell)
 $Headers = @{ "User-Agent" = "ChatGPT-User" }
 Invoke-WebRequest -UseBasicParsing -Uri "https://example.com/wp-json/airai/v1/ping?path=/airai-test" -Headers $Headers | Out-Null
 </pre>
-🔐 ***Security & Privacy***
+***Security & Privacy***
 
 Admin screens require manage_options capability.
 
@@ -164,7 +164,7 @@ All superglobals are wp_unslash() + sanitize_text_field() before use.
 
 Logs are stored in the options table under airai_free_bot_log_v1 with a size cap (default 300 entries).
 
-🧩 ***Troubleshooting***
+ ***Troubleshooting***
 
 “Failed to load plugin state”:
 
@@ -178,7 +178,7 @@ Check server error logs for firewall/WAF blocks.
 
 Verify REST route: /wp-json/airai/v1/ping.
 
-📦 ***Uninstall***
+***Uninstall***
 
 Deactivating leaves data intact. Remove options/logs manually if desired:
 
@@ -186,11 +186,11 @@ Options key: airai_free_options_v1
 
 Logs key: airai_free_bot_log_v1
 
-⚠️ ***Disclaimer***
+***Disclaimer***
 
 Compliance with robots.txt depends on the crawler. For stronger enforcement, use server/WAF rules (snippets provided).
 
-🧠*** Changelog (highlights)***
+*** Changelog (highlights)***
 
 1.4.2 – Hardened AJAX parsing, nonce fallback (admin-only), stability improvements.
 

@@ -191,6 +191,9 @@ Logs key: airai_free_bot_log_v1
 Compliance with robots.txt depends on the crawler. For stronger enforcement, use server/WAF rules (snippets provided).
 
 *** Changelog (highlights)***
+2.0.2 - Moved ipaddress logging to database and remove paywall. All tools are FREE now!
+
+1.5.6 - Added cleaner test procedure and script output for powershell and bash
 
 1.4.2 – Hardened AJAX parsing, nonce fallback (admin-only), stability improvements.
 

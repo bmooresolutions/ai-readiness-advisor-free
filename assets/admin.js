@@ -1,139 +1,652 @@
-(function(){
-    function pickEnv(){
-        if (window.AIRAI) return window.AIRAI;
-        if (window.AIRAI_FREE) return window.AIRAI_FREE;
-        return { ajaxurl:'', nonce:'', currentPage:'airai-dashboard', home:'/', site:'/', pluginVersion:'', theme:'default' };
-    }
-    function mountRoot(){
-        return document.querySelector('#airai-free-app') || document.querySelector('#airai-app');
-    }
-    function qsa(s,root){ return Array.prototype.slice.call((root||document).querySelectorAll(s)); }
-    function ajax(action, data, cb){
-        var env = pickEnv();
-        var f=new FormData();
-        f.append('action', action);
-        f.append('_ajax_nonce', env.nonce||'');
-        if (data){ for (var k in data){ if (Object.prototype.hasOwnProperty.call(data,k)) f.append(k, data[k]); } }
-        fetch(env.ajaxurl||'', {method:'POST', credentials:'same-origin', body:f})
-            .then(function(r){ return r.json(); })
-            .then(function(j){ cb(null,j); })
-            .catch(function(e){ cb(e); });
-    }
-    function pill(kind,text){ var s=document.createElement('span'); s.className='airai-badge '+kind; s.textContent=text; return s; }
-    function meter(score){ var wrap=document.createElement('div'); wrap.className='airai-meter'; var span=document.createElement('span'); span.style.width=(score||0)+'%'; wrap.appendChild(span); return wrap; }
-    function section(title){ var card=document.createElement('div'); card.className='airai-card'; var h=document.createElement('h2'); h.className='airai-title'; h.textContent=title; card.appendChild(h); var box=document.createElement('div'); card.appendChild(box); return {card:card,box:box}; }
-    function setTab(name){ qsa('.airai-tabs a').forEach(function(a){ a.classList.toggle('active', a.dataset.tab===name); }); qsa('.airai-tab').forEach(function(div){ div.classList.toggle('airai-hide', div.id!=='tab-'+name); }); try{ window.sessionStorage.setItem('airai_free_tab', name); }catch(e){} }
+/*! AI Readiness Advisor Admin v2.2 */
+(function () {
+    'use strict';
 
-    function robotsCard(state){
-        var card=section('robots.txt Status');
-        var list=document.createElement('ul'); list.style.margin='0'; list.style.paddingLeft='16px';
-        function li(t){ var x=document.createElement('li'); x.textContent=t; return x; }
-        list.appendChild(li('HTTP status: '+String(state.servedCode||0)));
-        list.appendChild(li('Physical file: '+(state.robotsPhysical?'yes':'no')));
-        list.appendChild(li('Likely dynamic (WP): '+(state.robotsDynamicLikely?'yes':'no')));
-        card.box.appendChild(list);
-        var pre=document.createElement('pre'); pre.className='airai-code'; var c=document.createElement('code'); c.textContent=(state.robotsHead||''); pre.appendChild(c); card.box.appendChild(pre);
-        var hint=document.createElement('div'); hint.className='small-muted'; hint.textContent='Full content available under Tools → Robots.txt Viewer.'; card.box.appendChild(hint);
-        return card.card;
+    function getEnv() {
+        return window.AIRAI || {
+            ajaxurl: '',
+            nonce: '',
+            currentPage: 'airai-dashboard',
+            home: '/',
+            site: '/',
+            pluginVersion: '',
+            theme: 'default',
+            playground: false
+        };
     }
 
-    function renderDashboard(state, mount){
-        var wrap=document.createElement('div'); wrap.className='airai-wrap';
-        var row=document.createElement('div'); row.className='airai-row'; wrap.appendChild(row);
-        var left=section('Readiness Overview'); row.appendChild(left.card);
-        var s=(state.readiness&&state.readiness.score)||0;
-        var k=document.createElement('p'); k.innerHTML='<strong>Readiness: </strong>'+String(s)+'%'; left.box.appendChild(k);
-        left.box.appendChild(meter(s));
-        var tips=document.createElement('p'); tips.className='small-muted'; tips.textContent=(state.robotsPhysical?'Physical robots.txt detected.':'No physical robots.txt file found. WordPress may be serving a virtual robots.txt.'); left.box.appendChild(tips);
-
-        row.appendChild(robotsCard(state));
-
-        var right=section('AI Bot Activity'); wrap.appendChild(right.card);
-        var info=document.createElement('div'); info.className='small-muted'; info.textContent='Use Tools → Quick Test, then open Logs and click Refresh to see entries.'; right.box.appendChild(info);
-        mount.appendChild(wrap);
+    function mountRoot() {
+        return document.querySelector('#airai-app');
     }
 
-    function renderVerify(state, mount){
-        var wrap=document.createElement('div'); wrap.className='airai-wrap';
-        var card=section('Root Access Simulation'); wrap.appendChild(card.card);
-        var table=document.createElement('table'); table.className='widefat striped table-clip'; table.innerHTML='<thead><tr><th>User-Agent</th><th title=\"Allowed if robots rules permit root access\">Access</th></tr></thead>'; var tb=document.createElement('tbody'); (state.verification||[]).forEach(function(r){ var tr=document.createElement('tr'); var td1=document.createElement('td'); var code=document.createElement('code'); code.textContent=r.ua; td1.appendChild(code); tr.appendChild(td1); var td2=document.createElement('td'); var v=r.allowed; var kind=(v===null?'warn':(v?'ok':'block')); var label=(v===null?'Not specified':(v?'Allowed':'Blocked')); td2.appendChild(pill(kind,label)); tr.appendChild(td2); tb.appendChild(tr); }); table.appendChild(tb); card.box.appendChild(table);
-
-        var form=document.createElement('div'); form.style.marginTop='10px'; form.innerHTML='<strong>Custom Path Verification</strong>';
-        var sel=document.createElement('select'); ['OAI-SearchBot','ChatGPT-User','PerplexityBot','GPTBot','Google-Extended','Applebot-Extended','CCBot'].forEach(function(u){ var o=document.createElement('option'); o.value=u; o.textContent=u; sel.appendChild(o); });
-        var input=document.createElement('input'); input.type='text'; input.value='/'; input.placeholder='/path'; input.title='Path to test against robots rules';
-        var btn=document.createElement('a'); btn.className='button'; btn.textContent='Verify'; var out=document.createElement('span'); out.style.marginLeft='8px';
-        form.appendChild(document.createTextNode(' UA: ')); form.appendChild(sel); form.appendChild(document.createTextNode(' Path: ')); form.appendChild(input); form.appendChild(btn); form.appendChild(out);
-        card.box.appendChild(form);
-        btn.addEventListener('click', function(e){ e.preventDefault(); out.textContent='…'; ajax('airai_free_verify_custom', {ua:sel.value, path:input.value}, function(err,j){ if(err||!j||!j.success){ out.textContent='Failed.'; return; } var v=j.data.allowed; out.textContent=(v===null?'Not specified':(v?'Allowed':'Blocked')); }); });
-
-        mount.appendChild(wrap);
+    function qsa(selector, root) {
+        return Array.prototype.slice.call((root || document).querySelectorAll(selector));
     }
 
-    function renderTools(state, mount){
-        var wrap=document.createElement('div'); wrap.className='airai-wrap';
-        var qt=section('Quick Test (no shell needed)'); wrap.appendChild(qt.card);
-        var p=document.createElement('p'); p.textContent='Emulates a bot and writes a log entry; then open Logs and click Refresh.'; qt.box.appendChild(p);
-        var btn=document.createElement('a'); btn.className='button button-secondary'; btn.textContent='Run'; var out=document.createElement('div'); out.style.marginTop='8px';
-        qt.box.appendChild(btn); qt.box.appendChild(out);
-        btn.addEventListener('click', function(e){ e.preventDefault(); out.textContent='Running…'; ajax('airai_free_run_quick_test', {}, function(err,j){ out.textContent= (err||!j||!j.success)?'Failed.':'Done. Check Logs.'; }); });
-
-        var rob=section('Robots.txt Viewer'); wrap.appendChild(rob.card);
-        var meta=document.createElement('div'); meta.className='small-muted'; meta.textContent='HTTP status: '+String(state.servedCode||0)+', physical: '+(state.robotsPhysical?'yes':'no')+'.'; rob.box.appendChild(meta);
-        var pre=document.createElement('pre'); pre.className='airai-code'; var code=document.createElement('code'); code.textContent=(state.servedRobots||''); pre.appendChild(code); rob.box.appendChild(pre);
-        var env=pickEnv(); var dl=document.createElement('a'); dl.className='button'; dl.textContent='Download sample robots.txt'; dl.addEventListener('click', function(e){ e.preventDefault(); var a=document.createElement('a'); a.href=(env.ajaxurl+'?action=airai_free_download_sample_robots&_ajax_nonce='+encodeURIComponent(env.nonce)); document.body.appendChild(a); a.click(); a.remove(); }); rob.box.appendChild(dl);
-		var p=document.createElement('p'); p.textContent='Copy this robots.txt file to the root of your website directory.'; qt.box.appendChild(p);
-
-        mount.appendChild(wrap);
+    function clearNode(node) {
+        while (node.firstChild) {
+            node.removeChild(node.firstChild);
+        }
     }
 
-    function renderLogs(mount){
-        var wrap=document.createElement('div'); wrap.className='airai-wrap'; var box=section('Logs'); wrap.appendChild(box.card);
-        var tools=document.createElement('div'); tools.style.margin='6px 0'; var refresh=document.createElement('a'); refresh.className='button'; refresh.textContent='Refresh'; var clear=document.createElement('a'); clear.className='button button-secondary'; clear.style.marginLeft='8px'; clear.textContent='Clear'; tools.appendChild(refresh); tools.appendChild(clear); box.box.appendChild(tools);
-        var out=document.createElement('div'); box.box.appendChild(out);
-        function load(){ out.innerHTML='Loading...'; ajax('airai_free_get_logs', {}, function(err,j){ if(err||!j||!j.success){ out.innerHTML='Failed.'; return;} var rows=j.data.log||[]; if(rows.length===0){ out.innerHTML='No entries yet.'; return;} var table=document.createElement('table'); table.className='widefat striped table-clip'; table.innerHTML='<thead><tr><th>Time</th><th>Bot</th><th>UA</th><th>IP</th><th>URI</th><th>Host</th></tr></thead>'; var tb=document.createElement('tbody'); rows.slice().reverse().forEach(function(L){ var tr=document.createElement('tr'); function td(v){ var t=document.createElement('td'); t.textContent=v||''; return t; } tr.appendChild(td(L.t)); tr.appendChild(td(L.bot)); var tdu=td(''); var c=document.createElement('code'); c.textContent=L.ua||''; tdu.appendChild(c); tr.appendChild(tdu); tr.appendChild(td(L.ip)); tr.appendChild(td(L.uri)); tr.appendChild(td(L.host)); tb.appendChild(tr);}); table.appendChild(tb); out.innerHTML=''; out.appendChild(table); }); }
-        refresh.addEventListener('click', function(e){ e.preventDefault(); load(); }); clear.addEventListener('click', function(e){ e.preventDefault(); ajax('airai_free_clear_logs', {}, function(){ load(); }); });
-        load(); mount.appendChild(wrap);
-    }
+    function el(tag, props, children) {
+        var node = document.createElement(tag);
+        props = props || {};
+        children = children || [];
 
-    function renderHelp(mount){
-        var wrap=document.createElement('div'); wrap.className='airai-wrap';
-        var intro=section('Help & Snippets'); wrap.appendChild(intro.card); intro.box.innerHTML='<p>Copy these commands to generate log entries and test your robots rules.</p>';
-        function code(label, text){ var card=document.createElement('div'); card.className='airai-card'; var h=document.createElement('h3'); h.textContent=label; card.appendChild(h); var pre=document.createElement('pre'); pre.className='airai-code'; var c=document.createElement('code'); c.textContent=text; pre.appendChild(c); card.appendChild(pre); wrap.appendChild(card); }
-        var env=pickEnv(), home=(env.home||'/');
-        code('Bash (curl) — emulate ChatGPT-User', 'curl -A \"ChatGPT-User\" \"'+home+'wp-json/airai/v1/ping?path=/\"');
-        code('PowerShell', 'Invoke-WebRequest -UserAgent \"ChatGPT-User\" \"'+home+'wp-json/airai/v1/ping?path=/\" | Select-Object -Expand Content');
-        code('Apache vhost snippet', '<Location \"/\">\\n  SetEnvIfNoCase User-Agent \"GPTBot|CCBot|PerplexityBot\" ai_block=1\\n  Order allow,deny\\n  Allow from all\\n  Deny from env=ai_block\\n</Location>');
-        code('Nginx snippet', 'map $http_user_agent $ai_block {\\n  default 0;\\n  ~*(GPTBot|CCBot|PerplexityBot) 1;\\n}\\nserver {\\n  if ($ai_block) { return 403; }\\n}');
-        code('Cloudflare WAF idea', 'Field: http.user_agent — contains any of [GPTBot, CCBot, PerplexityBot] → Block/Challenge');
-        mount.appendChild(wrap);
-    }
+        Object.keys(props).forEach(function (key) {
+            var value = props[key];
 
-    function buildUI(state){
-        var app = mountRoot(); if(!app){ return; }
-        var tabs = document.createElement('div'); tabs.className='airai-tabs';
-        function addTab(name,title){ var a=document.createElement('a'); a.href='#'; a.dataset.tab=name; a.textContent=title; a.addEventListener('click', function(ev){ ev.preventDefault(); setTab(name); }); tabs.appendChild(a); }
-        addTab('dashboard','Dashboard'); addTab('verify','Verification'); addTab('tools','Tools'); addTab('logs','Logs'); addTab('help','Help');
-        app.appendChild(tabs);
-        function pane(name){ var d=document.createElement('div'); d.className='airai-tab'; d.id='tab-'+name; app.appendChild(d); return d; }
-        var pDash=pane('dashboard'), pVer=pane('verify'), pTools=pane('tools'), pLogs=pane('logs'), pHelp=pane('help');
-        try{ renderDashboard(state, pDash); }catch(e){}
-        try{ renderVerify(state, pVer); }catch(e){}
-        try{ renderTools(state, pTools); }catch(e){}
-        try{ renderLogs(pLogs); }catch(e){}
-        try{ renderHelp(pHelp); }catch(e){}
-        var saved = null; try{ saved = window.sessionStorage.getItem('airai_free_tab'); }catch(e){}
-        var env = pickEnv(); var current=(env.currentPage||'airai-dashboard').replace('airai-','');
-        setTab(saved || current || 'dashboard');
-    }
-
-    document.addEventListener('DOMContentLoaded', function(){
-        var app = mountRoot(); if(!app){ return; }
-        app.innerHTML = '<div class=\"airai-wrap\"><div class=\"airai-card\">Loading...</div></div>';
-        ajax('airai_free_get_state', {}, function(err,j){
-            if (err || !j || !j.success){
-                app.innerHTML=''; var w=document.createElement('div'); w.className='airai-wrap'; var c=document.createElement('div'); c.className='airai-card notice-box notice-error'; c.textContent='Failed to load plugin state.'; w.appendChild(c); app.appendChild(w); return;
+            if (key === 'className') {
+                node.className = value;
+            } else if (key === 'text') {
+                node.textContent = value;
+            } else if (key === 'style' && value && typeof value === 'object') {
+                Object.keys(value).forEach(function (styleKey) {
+                    node.style[styleKey] = value[styleKey];
+                });
+            } else if (key === 'attrs' && value && typeof value === 'object') {
+                Object.keys(value).forEach(function (attr) {
+                    node.setAttribute(attr, value[attr]);
+                });
+            } else if (key.indexOf('on') === 0 && typeof value === 'function') {
+                node.addEventListener(key.substring(2).toLowerCase(), value);
+            } else {
+                node[key] = value;
             }
-            app.innerHTML=''; buildUI(j.data);
         });
-    });
+
+        children.forEach(function (child) {
+            if (child === null || typeof child === 'undefined') {
+                return;
+            }
+            if (typeof child === 'string') {
+                node.appendChild(document.createTextNode(child));
+            } else {
+                node.appendChild(child);
+            }
+        });
+
+        return node;
+    }
+
+    function section(title, subtitle) {
+        var card = el('div', { className: 'airai-card' });
+        card.appendChild(el('h2', { className: 'airai-title', text: title }));
+        if (subtitle) {
+            card.appendChild(el('p', { className: 'small-muted', text: subtitle }));
+        }
+        var body = el('div');
+        card.appendChild(body);
+        return { card: card, body: body };
+    }
+
+    function badge(kind, text) {
+        return el('span', { className: 'airai-badge ' + kind, text: text });
+    }
+
+    function allowedBadge(value) {
+        if (value === null || typeof value === 'undefined') {
+            return badge('warn', 'Not specified');
+        }
+        return badge(value ? 'ok' : 'block', value ? 'Allowed' : 'Blocked');
+    }
+
+    function boolBadge(value, yesLabel, noLabel) {
+        return badge(value ? 'ok' : 'block', value ? (yesLabel || 'Yes') : (noLabel || 'No'));
+    }
+
+    function meter(score) {
+        var safe = Number(score || 0);
+        if (safe < 0) safe = 0;
+        if (safe > 100) safe = 100;
+        var wrap = el('div', { className: 'airai-meter' });
+        wrap.appendChild(el('span', { style: { width: safe + '%' } }));
+        return wrap;
+    }
+
+    function notice(kind, text) {
+        return el('div', { className: 'notice-box notice-' + kind, text: text });
+    }
+
+    function table(headers, rows) {
+        var tbl = el('table', { className: 'widefat striped table-clip' });
+        var thead = el('thead');
+        var tbody = el('tbody');
+        var hr = el('tr');
+        headers.forEach(function (h) {
+            hr.appendChild(el('th', { text: h }));
+        });
+        thead.appendChild(hr);
+
+        rows.forEach(function (row) {
+            var tr = el('tr');
+            row.forEach(function (cell) {
+                var td = el('td');
+                if (typeof cell === 'string') {
+                    td.textContent = cell;
+                } else if (Array.isArray(cell)) {
+                    cell.forEach(function (item) {
+                        if (typeof item === 'string') {
+                            td.appendChild(document.createTextNode(item));
+                        } else if (item) {
+                            td.appendChild(item);
+                        }
+                    });
+                } else if (cell) {
+                    td.appendChild(cell);
+                }
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+
+        tbl.appendChild(thead);
+        tbl.appendChild(tbody);
+        return tbl;
+    }
+
+    function ajax(action, data, callback) {
+        var env = getEnv();
+        var form = new FormData();
+        form.append('action', action);
+        form.append('_ajax_nonce', env.nonce || '');
+
+        data = data || {};
+        Object.keys(data).forEach(function (key) {
+            form.append(key, data[key]);
+        });
+
+        fetch(env.ajaxurl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: form
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (json) {
+                callback(null, json);
+            })
+            .catch(function (error) {
+                callback(error);
+            });
+    }
+
+    function setTab(name) {
+        qsa('.airai-tabs a').forEach(function (link) {
+            link.classList.toggle('active', link.getAttribute('data-tab') === name);
+        });
+        qsa('.airai-tab').forEach(function (panel) {
+            panel.classList.toggle('airai-hide', panel.id !== 'tab-' + name);
+        });
+        try {
+            window.sessionStorage.setItem('airai_tab', name);
+        } catch (e) {}
+    }
+
+    function getSavedTab() {
+        try {
+            return window.sessionStorage.getItem('airai_tab');
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function buildShell(app, state) {
+        var env = getEnv();
+        var wrap = el('div', { className: 'airai-wrap' });
+
+        if (state.playgroundMode || env.playground) {
+            wrap.appendChild(notice('success', 'Playground-safe mode is active. The dashboard uses local WordPress data and avoids slow self-HTTP checks.'));
+        }
+
+        var tabs = el('div', { className: 'airai-tabs' });
+        var tabNames = [
+            ['dashboard', 'Dashboard'],
+            ['verification', 'Verification'],
+            ['audit', 'Audit'],
+            ['policies', 'Policies'],
+            ['tools', 'Tools'],
+            ['logs', 'Logs'],
+            ['help', 'Help']
+        ];
+
+        tabNames.forEach(function (item) {
+            var link = el('a', {
+                href: '#',
+                text: item[1],
+                attrs: { 'data-tab': item[0] },
+                onclick: function (event) {
+                    event.preventDefault();
+                    setTab(item[0]);
+                }
+            });
+            tabs.appendChild(link);
+        });
+
+        wrap.appendChild(tabs);
+
+        var panels = {};
+        tabNames.forEach(function (item) {
+            panels[item[0]] = el('div', {
+                className: 'airai-tab airai-hide',
+                attrs: { id: 'tab-' + item[0] }
+            });
+            wrap.appendChild(panels[item[0]]);
+        });
+
+        app.appendChild(wrap);
+        return panels;
+    }
+
+    function renderDashboard(panel, shellState, dashboardData) {
+        clearNode(panel);
+
+        var overview = section('Readiness Overview', 'Fast baseline checks loaded without slow network recursion.');
+        var score = (dashboardData.readiness && dashboardData.readiness.score) || 0;
+        overview.body.appendChild(el('p', { text: (dashboardData.readiness && dashboardData.readiness.summary) || 'No summary available.' }));
+        overview.body.appendChild(el('p', { text: 'Readiness score: ' + score + '%' }));
+        overview.body.appendChild(meter(score));
+
+        var checks = (dashboardData.readiness && dashboardData.readiness.checks) || [];
+        if (checks.length) {
+            var list = el('ul', { style: { paddingLeft: '18px' } });
+            checks.forEach(function (check) {
+                list.appendChild(el('li', { text: check.label || check.message || '' }));
+            });
+            overview.body.appendChild(list);
+        }
+
+        panel.appendChild(overview.card);
+
+        var robots = section('robots.txt Status');
+        robots.body.appendChild(table(
+            ['Signal', 'Value'],
+            [
+                ['HTTP status', String(dashboardData.servedCode || 0)],
+                ['Physical file', boolBadge(!!dashboardData.robotsPhysical, 'Yes', 'No')],
+                ['Dynamic WordPress output likely', boolBadge(!!dashboardData.robotsDynamicLikely, 'Yes', 'No')]
+            ]
+        ));
+        robots.body.appendChild(el('pre', { className: 'airai-code' }, [
+            el('code', { text: dashboardData.robotsHead || dashboardData.servedRobots || 'No robots.txt content available.' })
+        ]));
+        panel.appendChild(robots.card);
+
+        var sitemap = section('Sitemap Discovery');
+        var sitemapRows = [];
+        var map = dashboardData.sitemap || {};
+        Object.keys(map).forEach(function (key) {
+            var item = map[key] || {};
+            sitemapRows.push([
+                item.label || key,
+                item.url || '',
+                typeof item.status !== 'undefined' ? String(item.status) : '',
+                item.found ? boolBadge(true, 'Found', 'Not found') : boolBadge(false, 'Found', 'Not found')
+            ]);
+        });
+        if (sitemapRows.length) {
+            sitemap.body.appendChild(table(['Type', 'URL', 'Status', 'Result'], sitemapRows));
+        } else {
+            sitemap.body.appendChild(notice('warning', 'No sitemap data available.'));
+        }
+        panel.appendChild(sitemap.card);
+
+        var homepage = section('Homepage Signals');
+        var hp = dashboardData.homepage || {};
+        homepage.body.appendChild(table(
+            ['Signal', 'Value'],
+            [
+                ['Homepage URL', hp.url || ''],
+                ['HTTP status', String(hp.status || 0)],
+                ['Meta robots', hp.metaRobots || ''],
+                ['X-Robots-Tag', hp.xRobotsTag || ''],
+                ['Canonical', hp.canonical || ''],
+                ['JSON-LD detected', boolBadge(!!hp.jsonLd, 'Yes', 'No')]
+            ]
+        ));
+        panel.appendChild(homepage.card);
+
+        var actors = section('Known AI Actors');
+        function actorList(title, items) {
+            var box = el('div', { className: 'airai-card', style: { marginTop: '12px' } });
+            box.appendChild(el('h3', { text: title }));
+            var list = el('ul', { style: { paddingLeft: '18px' } });
+            (items || []).forEach(function (item) {
+                var text = item.label ? (item.label + ' — ' + item.token) : (item.token || '');
+                list.appendChild(el('li', { text: text }));
+            });
+            box.appendChild(list);
+            return box;
+        }
+        actors.body.appendChild(actorList('Crawlers', (shellState.knownActors && shellState.knownActors.crawlers) || []));
+        actors.body.appendChild(actorList('Fetchers', (shellState.knownActors && shellState.knownActors.fetchers) || []));
+        actors.body.appendChild(actorList('Policy tokens', (shellState.knownActors && shellState.knownActors.policyTokens) || []));
+        panel.appendChild(actors.card);
+    }
+
+    function renderVerification(panel, dashboardData) {
+        clearNode(panel);
+        var card = section('Verification');
+        var rows = (dashboardData.verification || []).map(function (item) {
+            return [
+                el('code', { text: item.ua || '' }),
+                allowedBadge(item.allowed)
+            ];
+        });
+
+        if (rows.length) {
+            card.body.appendChild(table(['User-Agent', 'Root access'], rows));
+        } else {
+            card.body.appendChild(notice('warning', 'No verification rows available.'));
+        }
+
+        var formWrap = el('div', { style: { marginTop: '12px' } });
+        var select = el('select');
+        [
+            'OAI-SearchBot',
+            'ChatGPT-User',
+            'GPTBot',
+            'CCBot',
+            'PerplexityBot',
+            'Google-Extended',
+            'Applebot-Extended'
+        ].forEach(function (token) {
+            select.appendChild(el('option', { value: token, text: token }));
+        });
+        var input = el('input', { type: 'text', value: '/', placeholder: '/path', style: { marginLeft: '8px' } });
+        var button = el('button', { type: 'button', className: 'button button-primary', text: 'Verify', style: { marginLeft: '8px' } });
+        var output = el('span', { style: { marginLeft: '8px' } });
+
+        button.addEventListener('click', function () {
+            output.textContent = 'Checking...';
+            ajax('airai_verify_custom', { ua: select.value, path: input.value }, function (err, json) {
+                if (err || !json || !json.success || !json.data) {
+                    output.textContent = 'Verification failed.';
+                    return;
+                }
+                var allowed = json.data.allowed;
+                output.textContent = allowed === null || typeof allowed === 'undefined'
+                    ? 'Not specified'
+                    : (allowed ? 'Allowed' : 'Blocked');
+            });
+        });
+
+        formWrap.appendChild(select);
+        formWrap.appendChild(input);
+        formWrap.appendChild(button);
+        formWrap.appendChild(output);
+        card.body.appendChild(formWrap);
+
+        panel.appendChild(card.card);
+    }
+
+    function renderAudit(panel, auditData) {
+        clearNode(panel);
+
+        var card = section('Important URL Audit');
+        var matrix = auditData.crawlMatrix || [];
+
+        if (!matrix.length) {
+            card.body.appendChild(notice('warning', 'No audit matrix available.'));
+            panel.appendChild(card.card);
+            return;
+        }
+
+        var actors = [];
+        matrix.forEach(function (row) {
+            Object.keys(row.rules || {}).forEach(function (name) {
+                if (actors.indexOf(name) === -1) {
+                    actors.push(name);
+                }
+            });
+        });
+
+        var headers = ['URL'].concat(actors);
+        var rows = matrix.map(function (row) {
+            var out = [el('code', { text: row.url || '' })];
+            actors.forEach(function (actor) {
+                out.push(allowedBadge((row.rules || {})[actor]));
+            });
+            return out;
+        });
+
+        card.body.appendChild(table(headers, rows));
+        panel.appendChild(card.card);
+    }
+
+    function renderPolicies(panel, auditData) {
+        clearNode(panel);
+
+        var card = section('Policy Builder');
+        var templates = auditData.policyTemplates || [];
+        if (!templates.length) {
+            card.body.appendChild(notice('warning', 'No policy templates available.'));
+            panel.appendChild(card.card);
+            return;
+        }
+
+        var select = el('select');
+        var desc = el('p', { className: 'small-muted' });
+        var pre = el('pre', { className: 'airai-code' }, [el('code', { text: '' })]);
+        var download = el('button', { type: 'button', className: 'button', text: 'Download sample', style: { marginTop: '10px' } });
+
+        templates.forEach(function (tpl, index) {
+            select.appendChild(el('option', { value: String(index), text: tpl.label || tpl.slug || ('Template ' + (index + 1)) }));
+        });
+
+        function showTemplate(index) {
+            var tpl = templates[index] || {};
+            desc.textContent = tpl.description || '';
+            pre.querySelector('code').textContent = tpl.content || '';
+            download.setAttribute('data-template', tpl.slug || 'balanced');
+        }
+
+        select.addEventListener('change', function () {
+            showTemplate(parseInt(select.value, 10) || 0);
+        });
+
+        download.addEventListener('click', function () {
+            var env = getEnv();
+            var tpl = download.getAttribute('data-template') || 'balanced';
+            var url = env.ajaxurl + '?action=airai_download_sample_robots&_ajax_nonce=' +
+                encodeURIComponent(env.nonce || '') + '&template=' + encodeURIComponent(tpl);
+            var a = document.createElement('a');
+            a.href = url;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        });
+
+        showTemplate(0);
+        card.body.appendChild(select);
+        card.body.appendChild(desc);
+        card.body.appendChild(pre);
+        card.body.appendChild(download);
+
+        panel.appendChild(card.card);
+    }
+
+    function renderTools(panel) {
+        clearNode(panel);
+
+        var quick = section('Quick Test', 'Adds a sample bot log entry without shell access.');
+        var runButton = el('button', { type: 'button', className: 'button button-secondary', text: 'Run Quick Test' });
+        var runOutput = el('div', { className: 'small-muted', style: { marginTop: '8px' } });
+
+        runButton.addEventListener('click', function () {
+            runOutput.textContent = 'Running...';
+            ajax('airai_run_quick_test', {}, function (err, json) {
+                if (err || !json || !json.success) {
+                    runOutput.textContent = 'Quick test failed.';
+                    return;
+                }
+                runOutput.textContent = 'Quick test complete. Open Logs to review the new entry.';
+            });
+        });
+
+        quick.body.appendChild(runButton);
+        quick.body.appendChild(runOutput);
+
+        var snippets = section('Test Snippets');
+        var env = getEnv();
+        var home = env.home || '/';
+        snippets.body.appendChild(el('pre', { className: 'airai-code' }, [
+            el('code', { text: 'curl -A "ChatGPT-User" "' + home + 'wp-json/airai/v1/ping?path=/"' })
+        ]));
+        snippets.body.appendChild(el('pre', { className: 'airai-code' }, [
+            el('code', { text: 'Invoke-WebRequest -UserAgent "ChatGPT-User" "' + home + 'wp-json/airai/v1/ping?path=/" | Select-Object -Expand Content' })
+        ]));
+
+        panel.appendChild(quick.card);
+        panel.appendChild(snippets.card);
+    }
+
+    function renderLogs(panel) {
+        clearNode(panel);
+
+        var card = section('Logs');
+        var controls = el('div', { style: { marginBottom: '10px' } });
+        var refresh = el('button', { type: 'button', className: 'button', text: 'Refresh' });
+        var clearBtn = el('button', { type: 'button', className: 'button button-secondary', text: 'Clear', style: { marginLeft: '8px' } });
+        var out = el('div');
+
+        function loadLogs() {
+            clearNode(out);
+            out.appendChild(el('div', { text: 'Loading logs...' }));
+            ajax('airai_get_logs', {}, function (err, json) {
+                clearNode(out);
+                if (err || !json || !json.success || !json.data) {
+                    out.appendChild(notice('error', 'Failed to load logs.'));
+                    return;
+                }
+
+                var rows = json.data.log || [];
+                if (!rows.length) {
+                    out.appendChild(notice('warning', 'No log entries yet.'));
+                    return;
+                }
+
+                var mapped = rows.slice().reverse().map(function (entry) {
+                    return [
+                        entry.t || '',
+                        entry.bot || '',
+                        el('code', { text: entry.ua || '' }),
+                        entry.ip || '',
+                        entry.uri || '',
+                        entry.host || ''
+                    ];
+                });
+
+                out.appendChild(table(['Time', 'Bot', 'User-Agent', 'IP', 'URI', 'Host'], mapped));
+            });
+        }
+
+        refresh.addEventListener('click', function () { loadLogs(); });
+        clearBtn.addEventListener('click', function () {
+            ajax('airai_clear_logs', {}, function () { loadLogs(); });
+        });
+
+        controls.appendChild(refresh);
+        controls.appendChild(clearBtn);
+        card.body.appendChild(controls);
+        card.body.appendChild(out);
+        panel.appendChild(card.card);
+
+        loadLogs();
+    }
+
+    function renderHelp(panel, shellState) {
+        clearNode(panel);
+
+        var card = section('Help', 'The split-load architecture keeps the admin UI responsive by loading dashboard and audit data separately.');
+        card.body.appendChild(el('ul', { style: { paddingLeft: '18px' } }, [
+            el('li', { text: 'Dashboard and robots status load from local WordPress data.' }),
+            el('li', { text: 'Audit data loads separately so one slow section cannot blank the whole page.' }),
+            el('li', { text: 'Playground-safe mode avoids recursive self-HTTP requests.' }),
+            el('li', { text: 'Version: ' + (shellState.version || '') })
+        ]));
+        panel.appendChild(card.card);
+    }
+
+    function tabForPage(currentPage) {
+        var map = {
+            'airai-dashboard': 'dashboard',
+            'airai-verification': 'verification',
+            'airai-audit': 'audit',
+            'airai-policies': 'policies',
+            'airai-tools': 'tools',
+            'airai-logs': 'logs',
+            'airai-help': 'help'
+        };
+        return map[currentPage] || 'dashboard';
+    }
+
+    function init() {
+        var app = mountRoot();
+        if (!app) {
+            return;
+        }
+
+        clearNode(app);
+        app.appendChild(el('div', { className: 'airai-wrap' }, [
+            el('div', { className: 'airai-card', text: 'Loading shell...' })
+        ]));
+
+        ajax('airai_get_state', {}, function (shellErr, shellJson) {
+            if (shellErr || !shellJson || !shellJson.success || !shellJson.data) {
+                clearNode(app);
+                app.appendChild(notice('error', 'Failed to load plugin shell.'));
+                return;
+            }
+
+            clearNode(app);
+            var shellState = shellJson.data;
+            var panels = buildShell(app, shellState);
+
+            panels.dashboard.appendChild(notice('warning', 'Loading dashboard data...'));
+            panels.verification.appendChild(notice('warning', 'Loading verification data...'));
+            panels.audit.appendChild(notice('warning', 'Loading audit data...'));
+            panels.policies.appendChild(notice('warning', 'Loading policy data...'));
+            panels.tools.appendChild(notice('warning', 'Loading tools...'));
+            panels.logs.appendChild(notice('warning', 'Loading logs...'));
+            panels.help.appendChild(notice('warning', 'Loading help...'));
+
+            renderTools(panels.tools);
+            renderHelp(panels.help, shellState);
+            renderLogs(panels.logs);
+
+            ajax('airai_get_dashboard_data', {}, function (dashErr, dashJson) {
+                if (dashErr || !dashJson || !dashJson.success || !dashJson.data) {
+                    clearNode(panels.dashboard);
+                    panels.dashboard.appendChild(notice('error', 'Failed to load dashboard data.'));
+                    clearNode(panels.verification);
+                    panels.verification.appendChild(notice('error', 'Failed to load verification data.'));
+                    return;
+                }
+
+                renderDashboard(panels.dashboard, shellState, dashJson.data);
+                renderVerification(panels.verification, dashJson.data);
+            });
+
+            ajax('airai_get_audit_data', {}, function (auditErr, auditJson) {
+                if (auditErr || !auditJson || !auditJson.success || !auditJson.data) {
+                    clearNode(panels.audit);
+                    panels.audit.appendChild(notice('error', 'Failed to load audit data.'));
+                    clearNode(panels.policies);
+                    panels.policies.appendChild(notice('error', 'Failed to load policy data.'));
+                    return;
+                }
+
+                renderAudit(panels.audit, auditJson.data);
+                renderPolicies(panels.policies, auditJson.data);
+            });
+
+            var startTab = getSavedTab() || tabForPage(getEnv().currentPage);
+            setTab(startTab);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
 })();

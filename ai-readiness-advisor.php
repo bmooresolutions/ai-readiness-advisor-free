@@ -22,6 +22,13 @@ const AIRAI_VERSION = '2.2.0';
 const AIRAI_OPT_KEY = 'airai_options_v4';
 const AIRAI_LOG_KEY = 'airai_bot_log_v3';
 
+if ( ! defined( 'AIRAI_WIZARD_OPTION_KEY' ) ) {
+	define( 'AIRAI_WIZARD_OPTION_KEY', 'airai_wizard_settings_v1' );
+}
+
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-airai-policy-engine.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/class-airai-wizard.php';
+
 function airai_default_options() {
 	return array(
 		'enable_bot_logging' => true,

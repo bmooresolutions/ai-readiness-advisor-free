@@ -277,15 +277,28 @@
                     el('p', { text: 'This guided setup will explain your current posture, ask about your goals, and recommend the policy that best fits your site.' })
                 ]));
 
-                if (state.step === 0) {
-                    return el('div', {}, [
-                        hero,
-                        el('div', { className: 'airai-wizard-highlight' }, [
-                            el('strong', { text: 'What this wizard does' }),
-                            el('p', { text: 'You will review your current site posture, learn the policy options in plain English, answer a few simple questions, and apply a recommended policy using WordPress dynamic robots.txt output.' })
-                        ])
-                    ]);
-                }
+              return el('div', {}, [
+    el('h2', { text: 'Welcome to the AI Readiness Setup Wizard' }),
+
+    el('p', {
+        text: 'This guided setup will help you understand how AI systems interact with your website and assist you in choosing the right access policy based on your goals.'
+    }),
+
+    el('div', { className: 'airai-wizard-highlight' }, [
+        el('strong', { text: 'What you will do in this wizard' }),
+        el('ul', {}, [
+            el('li', { text: 'Review your current website configuration' }),
+            el('li', { text: 'Learn what different AI access options mean' }),
+            el('li', { text: 'Answer a few simple questions about your goals' }),
+            el('li', { text: 'Apply a recommended policy safely through WordPress' })
+        ])
+    ]),
+
+    el('p', {
+        className: 'description',
+        text: 'This does not change any files directly. Everything is applied safely using WordPress settings.'
+    })
+]);
 
                 if (state.step === 1) {
                     return el('div', {}, [

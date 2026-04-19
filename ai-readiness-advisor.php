@@ -795,15 +795,6 @@ add_action(
 	}
 );
 
-function airai_render_admin_page() {
-	?>
-	<div class="wrap">
-		<h1><?php echo esc_html__( 'AI Readiness', 'ai-readiness-advisor' ); ?></h1>
-		<div id="airai-app"></div>
-	</div>
-	<?php
-}
-
 function airai_add_menu_pages() {
 	$cap      = 'manage_options';
 	$icon     = 'dashicons-shield-alt';

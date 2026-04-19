@@ -28,7 +28,6 @@ if ( ! class_exists( 'AIRAI_Wizard' ) ) {
 		 * @return void
 		 */
 		public static function init() {
-			add_action( 'admin_menu', array( __CLASS__, 'register_menu' ) );
 			add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
 
 			add_action( 'wp_ajax_airai_get_wizard_state', array( __CLASS__, 'ajax_get_wizard_state' ) );
@@ -75,45 +74,42 @@ if ( ! class_exists( 'AIRAI_Wizard' ) ) {
 		 * @return void
 		 */
 		public static function enqueue_assets( $hook ) {
-			if ( false === strpos( (string) $hook, 'airai-wizard' ) ) {
-				return;
-			}
+	$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 
-			$version = defined( 'AIRAI_VERSION' ) ? AIRAI_VERSION : '2.3.0';
+	if ( 'airai-wizard' !== $page ) {
+		return;
+	}
 
-			wp_enqueue_script(
-				'airai-admin-wizard',
-				plugin_dir_url( dirname( __FILE__ ) . '/placeholder' ) . 'assets/admin-wizard.js',
-				array(),
-				$version,
-				true
-			);
+	$version = defined( 'AIRAI_VERSION' ) ? AIRAI_VERSION : '2.3.0';
 
-			$settings = AIRAI_Policy_Engine::get_settings();
-			$policies = AIRAI_Policy_Engine::get_policies();
+	wp_enqueue_script(
+		'airai-admin-wizard',
+		plugin_dir_url( dirname( __FILE__ ) . '/placeholder' ) . 'assets/admin-wizard.js',
+		array(),
+		$version,
+		true
+	);
 
-			wp_localize_script(
-				'airai-admin-wizard',
-				'AIRAI_WIZARD',
-				array(
-					'ajaxurl'     => admin_url( 'admin-ajax.php' ),
-					'nonce'       => wp_create_nonce( 'airai_wizard_ajax' ),
-					'currentPage' => isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : 'airai-wizard',
-					'policies'    => $policies,
-					'settings'    => $settings,
-					'playground'  => function_exists( 'airai_is_playground' ) ? airai_is_playground() : false,
-					'images'      => array(
-						'helper' => plugin_dir_url( dirname( __FILE__ ) . '/placeholder' ) . 'assets/images/robot-helper.svg',
-						'wall'   => plugin_dir_url( dirname( __FILE__ ) . '/placeholder' ) . 'assets/images/robot-wall.svg',
-					),
-					'i18n'        => array(
-						'loading' => __( 'Loading wizard...', 'ai-readiness-advisor' ),
-						'error'   => __( 'The wizard could not be loaded.', 'ai-readiness-advisor' ),
-					),
-				)
-			);
-		}
+	$settings = AIRAI_Policy_Engine::get_settings();
+	$policies = AIRAI_Policy_Engine::get_policies();
 
+	wp_localize_script(
+		'airai-admin-wizard',
+		'AIRAI_WIZARD',
+		array(
+			'ajaxurl'     => admin_url( 'admin-ajax.php' ),
+			'nonce'       => wp_create_nonce( 'airai_wizard_ajax' ),
+			'currentPage' => $page,
+			'policies'    => $policies,
+			'settings'    => $settings,
+			'playground'  => function_exists( 'airai_is_playground' ) ? airai_is_playground() : false,
+			'i18n'        => array(
+				'loading' => __( 'Loading wizard...', 'ai-readiness-advisor' ),
+				'error'   => __( 'The wizard could not be loaded.', 'ai-readiness-advisor' ),
+			),
+		)
+	);
+}
 		/**
 		 * Enforce nonce and capability checks for all wizard AJAX actions.
 		 *

@@ -302,7 +302,7 @@
 
                 if (state.step === 1) {
                     return el('div', {}, [
-                        el('h2', { text: 'What we found' }),
+                        el('h2', { text: 'Your Current Setup' }),
                         el('div', { className: 'airai-wizard-grid' }, [
                             el('div', { className: 'airai-wizard-card' }, [
                                 el('strong', { text: 'Readiness score' }),
@@ -321,19 +321,27 @@
                                 el('p', { text: state.audit.sitemap_present ? 'Yes' : 'No' })
                             ])
                         ]),
-                        el('div', { className: 'airai-wizard-card' }, [
-                            el('h3', { text: 'What this means' }),
-                            el('ul', {}, (state.audit.explainers || []).map(function (item) {
-                                return el('li', { text: item });
-                            }))
-                        ])
-                    ]);
-                }
+                       el('div', { className: 'airai-wizard-card' }, [
+    el('h3', { text: 'What this means' }),
+    el('ul', {}, (state.audit.explainers || []).map(function (item) {
+        return el('li', { text: item });
+    })),
+
+    el('div', { className: 'airai-wizard-highlight' }, [
+        el('strong', { text: 'Why this matters' }),
+        el('p', {
+            text: 'Your robots.txt file acts as a set of instructions for automated systems. It helps communicate what parts of your site can be accessed and how.'
+        }),
+        el('p', {
+            text: 'This is not a security system, but it helps guide responsible bots and AI tools in how they interact with your content.'
+        })
+    ])
+])
 
                 if (state.step === 2) {
                     var policies = state.policies;
                     return el('div', {}, [
-                        el('h2', { text: 'Learn the choices' }),
+                        el('h2', { text: 'Your Policy Options Explained' }),
                         el('div', { className: 'airai-wizard-grid' }, Object.keys(policies).map(function (slug) {
                             var p = policies[slug];
                             return el('div', { className: 'airai-wizard-card' }, [
@@ -347,70 +355,7 @@
                     ]);
                 }
 
-                if (state.step === 3) {
-                    return el('div', {}, [
-                        el('h2', { text: 'Tell us about your goals' }),
-                        el('div', { className: 'airai-wizard-card' }, [
-                            el('h3', { text: 'What matters most to you?' }),
-                            makeOptionCard('Maximum visibility', 'I want my site broadly discoverable in AI-assisted search and related systems.', state.answers.primary_goal === 'maximum_visibility', 'maximum_visibility', 'primary_goal', function () {
-                                state.answers.primary_goal = 'maximum_visibility';
-                            }),
-                            makeOptionCard('Balanced visibility and control', 'I want visibility, but with more control over automated access.', state.answers.primary_goal === 'balanced_control', 'balanced_control', 'primary_goal', function () {
-                                state.answers.primary_goal = 'balanced_control';
-                            }),
-                            makeOptionCard('User-requested access only', 'I want access mainly when a user explicitly asks for it.', state.answers.primary_goal === 'user_requested_only', 'user_requested_only', 'primary_goal', function () {
-                                state.answers.primary_goal = 'user_requested_only';
-                            }),
-                            makeOptionCard('Block AI-related access', 'I want the strongest policy signal to block AI-related crawler access.', state.answers.primary_goal === 'block_ai', 'block_ai', 'primary_goal', function () {
-                                state.answers.primary_goal = 'block_ai';
-                            })
-                        ]),
-                        el('div', { className: 'airai-wizard-grid' }, [
-                            el('div', { className: 'airai-wizard-card' }, [
-                                el('h3', { text: 'Which sounds most like your site?' }),
-                                el('select', {
-                                    value: state.answers.site_type || '',
-                                    onchange: function (e) {
-                                        state.answers.site_type = e.target.value;
-                                    }
-                                }, [
-                                    el('option', { value: '', text: 'Choose one...' }),
-                                    el('option', { value: 'marketing', text: 'Marketing / lead generation' }),
-                                    el('option', { value: 'local_business', text: 'Local business' }),
-                                    el('option', { value: 'professional_services', text: 'Professional services' }),
-                                    el('option', { value: 'blog', text: 'Blog / publishing' }),
-                                    el('option', { value: 'premium', text: 'Premium or subscription content' }),
-                                    el('option', { value: 'sensitive', text: 'Sensitive or privacy-focused content' })
-                                ])
-                            ]),
-                            el('div', { className: 'airai-wizard-card' }, [
-                                el('h3', { text: 'How cautious do you want to be?' }),
-                                el('select', {
-                                    value: state.answers.caution_level || '',
-                                    onchange: function (e) {
-                                        state.answers.caution_level = e.target.value;
-                                    }
-                                }, [
-                                    el('option', { value: '', text: 'Choose one...' }),
-                                    el('option', { value: 'low', text: 'Low caution' }),
-                                    el('option', { value: 'medium', text: 'Medium caution' }),
-                                    el('option', { value: 'high', text: 'High caution' })
-                                ])
-                            ])
-                        ]),
-                        el('button', {
-                            type: 'button',
-                            className: 'button button-primary',
-                            text: 'Get Recommendation',
-                            onclick: function () {
-                                saveAnswersAndRecommend(function () {
-                                    state.step = 4;
-                                    render();
-                                });
-                            }
-                        })
-                    ]);
-                }
+               
 
                 if (state.step === 4) {
                     return el('div', {}, [
@@ -422,7 +367,118 @@
                         ])
                     ]);
                 }
+if (state.step === 3) {
+    return el('div', {}, [
+        el('h2', { text: 'Let’s Find the Right Setup for You' }),
 
+        el('p', {
+            text: 'Answer a few quick questions. There are no wrong answers — this helps us recommend the best setup for your situation.'
+        }),
+
+        el('div', { className: 'airai-wizard-card' }, [
+            el('h3', { text: 'What matters most to you?' }),
+
+            makeOptionCard(
+                'Maximum visibility',
+                'I want my site broadly discoverable in AI-assisted search and related systems.',
+                state.answers.primary_goal === 'maximum_visibility',
+                'maximum_visibility',
+                'primary_goal',
+                function () {
+                    state.answers.primary_goal = 'maximum_visibility';
+                }
+            ),
+
+            makeOptionCard(
+                'Balanced visibility and control',
+                'I want visibility, but with more control over automated access.',
+                state.answers.primary_goal === 'balanced_control',
+                'balanced_control',
+                'primary_goal',
+                function () {
+                    state.answers.primary_goal = 'balanced_control';
+                }
+            ),
+
+            makeOptionCard(
+                'User-requested access only',
+                'I want access mainly when a user explicitly asks for it.',
+                state.answers.primary_goal === 'user_requested_only',
+                'user_requested_only',
+                'primary_goal',
+                function () {
+                    state.answers.primary_goal = 'user_requested_only';
+                }
+            ),
+
+            makeOptionCard(
+                'Block AI-related access',
+                'I want the strongest policy signal to block AI-related crawler access.',
+                state.answers.primary_goal === 'block_ai',
+                'block_ai',
+                'primary_goal',
+                function () {
+                    state.answers.primary_goal = 'block_ai';
+                }
+            )
+        ]),
+
+        el('div', { className: 'airai-wizard-grid' }, [
+            el('div', { className: 'airai-wizard-card' }, [
+                el('h3', { text: 'Which sounds most like your site?' }),
+                el('p', {
+                    className: 'description',
+                    text: 'This helps us better match the recommendation to the kind of content and business goals your website has.'
+                }),
+                el('select', {
+                    value: state.answers.site_type || '',
+                    onchange: function (e) {
+                        state.answers.site_type = e.target.value;
+                    }
+                }, [
+                    el('option', { value: '', text: 'Choose one...' }),
+                    el('option', { value: 'marketing', text: 'Marketing / lead generation' }),
+                    el('option', { value: 'local_business', text: 'Local business' }),
+                    el('option', { value: 'professional_services', text: 'Professional services' }),
+                    el('option', { value: 'blog', text: 'Blog / publishing' }),
+                    el('option', { value: 'premium', text: 'Premium or subscription content' }),
+                    el('option', { value: 'sensitive', text: 'Sensitive or privacy-focused content' })
+                ])
+            ]),
+
+            el('div', { className: 'airai-wizard-card' }, [
+                el('h3', { text: 'How cautious do you want to be?' }),
+                el('p', {
+                    className: 'description',
+                    text: 'Choose how conservative you want your AI access policy to be.'
+                }),
+                el('select', {
+                    value: state.answers.caution_level || '',
+                    onchange: function (e) {
+                        state.answers.caution_level = e.target.value;
+                    }
+                }, [
+                    el('option', { value: '', text: 'Choose one...' }),
+                    el('option', { value: 'low', text: 'Low caution' }),
+                    el('option', { value: 'medium', text: 'Medium caution' }),
+                    el('option', { value: 'high', text: 'High caution' })
+                ])
+            ])
+        ]),
+
+        el('button', {
+            type: 'button',
+            className: 'button button-primary',
+            text: 'Get Recommendation',
+            onclick: function () {
+                saveAnswersAndRecommend(function () {
+                    state.step = 4;
+                    render();
+                });
+            }
+        })
+    ]);
+}
                 return el('div', {}, [
                     el('h2', { text: 'Setup complete' }),
                     el('p', { text: state.status || 'Your AI access policy is now active.' }),

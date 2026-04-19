@@ -36,21 +36,7 @@ if ( ! class_exists( 'AIRAI_Wizard' ) ) {
 			add_action( 'wp_ajax_airai_reset_wizard', array( __CLASS__, 'ajax_reset_wizard' ) );
 		}
 
-		/**
-		 * Register wizard submenu page.
-		 *
-		 * @return void
-		 */
-		public static function register_menu() {
-			add_submenu_page(
-				'airai-dashboard',
-				__( 'Setup Wizard', 'ai-readiness-advisor' ),
-				__( 'Setup Wizard', 'ai-readiness-advisor' ),
-				'manage_options',
-				'airai-wizard',
-				array( __CLASS__, 'render_page' )
-			);
-		}
+	
 
 		/**
 		 * Render the wizard root.

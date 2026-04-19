@@ -806,7 +806,6 @@ function airai_render_admin_page() {
 
 function airai_add_menu_pages() {
 	$cap      = 'manage_options';
-	$callback = 'airai_render_admin_page';
 	$icon     = 'dashicons-shield-alt';
 	$position = 65;
 
@@ -815,20 +814,103 @@ function airai_add_menu_pages() {
 		__( 'AI Readiness', 'ai-readiness-advisor' ),
 		$cap,
 		'airai-dashboard',
-		$callback,
+		'airai_render_admin_page',
 		$icon,
 		$position
 	);
 
-	add_submenu_page( 'airai-dashboard', __( 'Dashboard', 'ai-readiness-advisor' ), __( 'Dashboard', 'ai-readiness-advisor' ), $cap, 'airai-dashboard', $callback );
-	add_submenu_page( 'airai-dashboard', __( 'Verification', 'ai-readiness-advisor' ), __( 'Verification', 'ai-readiness-advisor' ), $cap, 'airai-verification', $callback );
-	add_submenu_page( 'airai-dashboard', __( 'Audit', 'ai-readiness-advisor' ), __( 'Audit', 'ai-readiness-advisor' ), $cap, 'airai-audit', $callback );
-	add_submenu_page( 'airai-dashboard', __( 'Policies', 'ai-readiness-advisor' ), __( 'Policies', 'ai-readiness-advisor' ), $cap, 'airai-policies', $callback );
-	add_submenu_page( 'airai-dashboard', __( 'Tools', 'ai-readiness-advisor' ), __( 'Tools', 'ai-readiness-advisor' ), $cap, 'airai-tools', $callback );
-	add_submenu_page( 'airai-dashboard', __( 'Logs', 'ai-readiness-advisor' ), __( 'Logs', 'ai-readiness-advisor' ), $cap, 'airai-logs', $callback );
-	add_submenu_page( 'airai-dashboard', __( 'Help', 'ai-readiness-advisor' ), __( 'Help', 'ai-readiness-advisor' ), $cap, 'airai-help', $callback );
+	add_submenu_page(
+		'airai-dashboard',
+		__( 'Dashboard', 'ai-readiness-advisor' ),
+		__( 'Dashboard', 'ai-readiness-advisor' ),
+		$cap,
+		'airai-dashboard',
+		'airai_render_admin_page'
+	);
+
+	add_submenu_page(
+		'airai-dashboard',
+		__( 'Verification', 'ai-readiness-advisor' ),
+		__( 'Verification', 'ai-readiness-advisor' ),
+		$cap,
+		'airai-verification',
+		'airai_render_admin_page'
+	);
+
+	add_submenu_page(
+		'airai-dashboard',
+		__( 'Audit', 'ai-readiness-advisor' ),
+		__( 'Audit', 'ai-readiness-advisor' ),
+		$cap,
+		'airai-audit',
+		'airai_render_admin_page'
+	);
+
+	add_submenu_page(
+		'airai-dashboard',
+		__( 'Policies', 'ai-readiness-advisor' ),
+		__( 'Policies', 'ai-readiness-advisor' ),
+		$cap,
+		'airai-policies',
+		'airai_render_admin_page'
+	);
+
+	add_submenu_page(
+		'airai-dashboard',
+		__( 'Tools', 'ai-readiness-advisor' ),
+		__( 'Tools', 'ai-readiness-advisor' ),
+		$cap,
+		'airai-tools',
+		'airai_render_admin_page'
+	);
+
+	add_submenu_page(
+		'airai-dashboard',
+		__( 'Logs', 'ai-readiness-advisor' ),
+		__( 'Logs', 'ai-readiness-advisor' ),
+		$cap,
+		'airai-logs',
+		'airai_render_admin_page'
+	);
+
+	add_submenu_page(
+		'airai-dashboard',
+		__( 'Help', 'ai-readiness-advisor' ),
+		__( 'Help', 'ai-readiness-advisor' ),
+		$cap,
+		'airai-help',
+		'airai_render_admin_page'
+	);
+
+	add_submenu_page(
+		'airai-dashboard',
+		__( 'Setup Wizard', 'ai-readiness-advisor' ),
+		__( 'Setup Wizard', 'ai-readiness-advisor' ),
+		$cap,
+		'airai-wizard',
+		'airai_render_wizard_page'
+	);
 }
 add_action( 'admin_menu', 'airai_add_menu_pages' );
+
+function airai_render_admin_page() {
+	?>
+	<div class="wrap">
+		<h1><?php echo esc_html__( 'AI Readiness', 'ai-readiness-advisor' ); ?></h1>
+		<div id="airai-app"></div>
+	</div>
+	<?php
+}
+
+function airai_render_wizard_page() {
+	?>
+	<div class="wrap">
+		<h1><?php echo esc_html__( 'AI Readiness Setup Wizard', 'ai-readiness-advisor' ); ?></h1>
+		<p><?php echo esc_html__( 'This wizard helps you understand your site posture, choose your goals, and apply a recommended AI access policy.', 'ai-readiness-advisor' ); ?></p>
+		<div id="airai-wizard-app"></div>
+	</div>
+	<?php
+}
 
 function airai_enqueue_admin_assets( $hook ) {
 	if ( false === strpos( (string) $hook, 'airai' ) ) {

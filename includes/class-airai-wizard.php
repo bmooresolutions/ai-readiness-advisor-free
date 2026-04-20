@@ -59,7 +59,7 @@ if ( ! class_exists( 'AIRAI_Wizard' ) ) {
 		 * @param string $hook Current admin hook.
 		 * @return void
 		 */
-		public static function enqueue_assets( $hook ) {
+public static function enqueue_assets( $hook ) {
 	$page = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
 
 	if ( 'airai-wizard' !== $page ) {
@@ -70,7 +70,7 @@ if ( ! class_exists( 'AIRAI_Wizard' ) ) {
 
 	wp_enqueue_script(
 		'airai-admin-wizard',
-		plugin_dir_url( dirname( __FILE__ ) . '/placeholder' ) . 'assets/admin-wizard.js',
+		plugin_dir_url( dirname( __FILE__ ) ) . 'assets/admin-wizard.js',
 		array(),
 		$version,
 		true

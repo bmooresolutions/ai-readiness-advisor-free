@@ -329,6 +329,12 @@
     function renderVerification(panel, dashboardData) {
         clearNode(panel);
         var card = section('Verification');
+        var activePolicyText = state.activePolicy ? state.activePolicy : 'None selected';
+
+card.body.appendChild(el('p', {
+    className: 'small-muted',
+    text: 'Current active policy: ' + activePolicyText
+}));
         var rows = (dashboardData.verification || []).map(function (item) {
             return [
                 el('code', { text: item.ua || '' }),

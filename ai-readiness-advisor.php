@@ -623,6 +623,8 @@ function airai_collect_dashboard_state() {
 		'sitemap'             => $sitemap,
 		'homepage'            => $homepage,
 		'verification'        => $verification,
+		'activePolicy'    	  => class_exists( 'AIRAI_Policy_Engine' ) ? AIRAI_Policy_Engine::get_active_policy() : '',
+		'effectivePolicyText' => class_exists( 'AIRAI_Policy_Engine' ) ? AIRAI_Policy_Engine::get_effective_policy_text() : '',
 	);
 }
 
@@ -638,7 +640,55 @@ function airai_collect_audit_state() {
 		'policyTemplates' => $policies,
 	);
 }
+function airai_ajax_save_policy_text() {
+	airai_require_ajax_permissions();
 
+	if ( ! class_exists( 'AIRAI_Policy_Engine' ) ) {
+		wp_send_json_error(
+			array(
+				'message' => 'Policy engine not available.',
+			),
+			500
+		);
+	}
+
+	$text = isset( $_POST['policy_text'] ) ? wp_unslash( $_POST['policy_text'] ) : '';
+
+	AIRAI_Policy_Engine::set_custom_policy_text( $text );
+
+	wp_send_json_success(
+		array(
+			'message' => 'Policy text saved.',
+			'activePolicy' => AIRAI_Policy_Engine::get_active_policy(),
+			'effectivePolicyText' => AIRAI_Policy_Engine::get_effective_policy_text(),
+		)
+	);
+}
+add_action( 'wp_ajax_airai_save_policy_text', 'airai_ajax_save_policy_text' );
+
+function airai_ajax_reset_policy_to_template() {
+	airai_require_ajax_permissions();
+
+	if ( ! class_exists( 'AIRAI_Policy_Engine' ) ) {
+		wp_send_json_error(
+			array(
+				'message' => 'Policy engine not available.',
+			),
+			500
+		);
+	}
+
+	AIRAI_Policy_Engine::clear_custom_policy_text();
+
+	wp_send_json_success(
+		array(
+			'message' => 'Policy reset to template.',
+			'activePolicy' => AIRAI_Policy_Engine::get_active_policy(),
+			'effectivePolicyText' => AIRAI_Policy_Engine::get_effective_policy_text(),
+		)
+	);
+}
+add_action( 'wp_ajax_airai_reset_policy_to_template', 'airai_ajax_reset_policy_to_template' );
 function airai_require_ajax_permissions() {
 	check_ajax_referer( 'airai_ajax' );
 

@@ -31,19 +31,94 @@ if ( ! class_exists( 'AIRAI_Policy_Engine' ) ) {
 		public static function option_key() {
 			return defined( 'AIRAI_WIZARD_OPTION_KEY' ) ? AIRAI_WIZARD_OPTION_KEY : 'airai_wizard_settings_v1';
 		}
+		/**
+		 * Get the effective policy text.
+		 *
+		 * Uses custom policy text if present, otherwise falls back to the active template.
+		 *
+		 * @return string
+		 */
+		public static function get_effective_policy_text() {
+			$settings = self::get_settings();
 
+			if ( ! empty( $settings['custom_policy_text'] ) ) {
+				return (string) $settings['custom_policy_text'];
+			}
+
+			$active   = self::get_active_policy();
+			$policies = self::get_policies();
+
+			if ( ! empty( $active ) && isset( $policies[ $active ] ) ) {
+				return (string) $policies[ $active ]['robots_text'];
+			}
+
+			return '';
+		}
+
+		/**
+		 * Save a custom policy block.
+		 *
+		 * @param string $text Custom policy text.
+		 * @return bool
+		 */
+		public static function set_custom_policy_text( $text ) {
+			$settings = self::get_settings();
+
+			$settings['custom_policy_text'] = self::sanitize_policy_text( $text );
+			$settings['last_run']           = current_time( 'mysql' );
+
+			return self::save_settings( $settings );
+		}
+
+		/**
+		 * Clear custom policy text.
+		 *
+		 * @return bool
+		 */
+		public static function clear_custom_policy_text() {
+			$settings = self::get_settings();
+
+			$settings['custom_policy_text'] = '';
+			$settings['last_run']           = current_time( 'mysql' );
+
+			return self::save_settings( $settings );
+		}
+
+		/**
+		 * Sanitize editable policy text.
+		 *
+		 * Keeps plain text only. This is not HTML.
+		 *
+		 * @param string $text Raw policy text.
+		 * @return string
+		 */
+		public static function sanitize_policy_text( $text ) {
+			$text = is_string( $text ) ? wp_unslash( $text ) : '';
+			$text = str_replace( array( "\r\n", "\r" ), "\n", $text );
+			$text = preg_replace( '/[^\PC\s]/u', '', $text );
+
+			$lines = explode( "\n", $text );
+			$clean = array();
+
+			foreach ( $lines as $line ) {
+				$clean[] = trim( sanitize_text_field( $line ) );
+			}
+
+			return trim( implode( "\n", $clean ) );
+		}
 		/**
 		 * Get persisted wizard settings.
 		 *
 		 * @return array
 		 */
-		public static function get_settings() {
-			$settings = get_option( self::option_key(), array() );
-
-			if ( ! is_array( $settings ) ) {
-				$settings = array();
-			}
-
+	$defaults = array(
+	'wizard_completed' => false,
+	'answers'          => array(),
+	'recommended'      => 'balanced',
+	'active_policy'    => '',
+	'custom_policy_text' => '',
+	'last_run'         => '',
+);
 			$defaults = array(
 				'wizard_completed' => false,
 				'answers'          => array(),
@@ -206,9 +281,10 @@ if ( ! class_exists( 'AIRAI_Policy_Engine' ) ) {
 			}
 
 			$settings                     = self::get_settings();
-			$settings['active_policy']    = $policy_slug;
-			$settings['wizard_completed'] = true;
-			$settings['last_run']         = current_time( 'mysql' );
+			$settings['active_policy']      = $policy_slug;
+			$settings['custom_policy_text'] = '';
+			$settings['wizard_completed']   = true;
+			$settings['last_run']           = current_time( 'mysql' );
 
 			return self::save_settings( $settings );
 		}
@@ -236,7 +312,7 @@ if ( ! class_exists( 'AIRAI_Policy_Engine' ) ) {
 			return self::save_settings( $settings );
 		}
 
-		/**
+				/**
 		 * Inject the active AI policy into dynamic robots.txt output.
 		 *
 		 * @param string $output Current robots.txt output.
@@ -244,26 +320,19 @@ if ( ! class_exists( 'AIRAI_Policy_Engine' ) ) {
 		 * @return string
 		 */
 		public static function filter_robots_txt( $output, $public ) {
+			$policy_text = self::get_effective_policy_text();
+
+			if ( empty( $policy_text ) ) {
+				return $output;
+			}
+
 			$active = self::get_active_policy();
+			$label  = ! empty( $active ) ? $active : 'custom';
 
-			if ( empty( $active ) ) {
-				return $output;
-			}
-
-			$policies = self::get_policies();
-
-			if ( ! isset( $policies[ $active ] ) ) {
-				return $output;
-			}
-
-			$block  = "\n# AI Readiness Advisor policy: " . $active . "\n";
-			$block .= trim( $policies[ $active ]['robots_text'] ) . "\n";
+			$block  = "\n# AI Readiness Advisor policy: " . $label . "\n";
+			$block .= trim( $policy_text ) . "\n";
 
 			$output = trim( (string) $output );
 
 			return $output . "\n\n" . $block;
 		}
-	}
-
-	add_filter( 'robots_txt', array( 'AIRAI_Policy_Engine', 'filter_robots_txt' ), 20, 2 );
-}
